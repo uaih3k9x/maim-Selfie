@@ -4,6 +4,7 @@
 // "We shape the void."
 """
 
+from pathlib import Path
 from typing import List, Tuple, Type
 
 from src.plugin_system import BasePlugin, register_plugin, ConfigField
@@ -12,6 +13,7 @@ from src.common.logger import get_logger
 from .tools import TakeSelfiePhotoTool
 from .handlers import SelfieActivityHandler
 from .commands import SelfieCommand
+from .core.config_manager import ConfigManager
 
 logger = get_logger("selfie_plugin")
 
@@ -28,7 +30,7 @@ class SelfiePlugin(BasePlugin):
     plugin_name: str = "selfie_plugin"
     enable_plugin: bool = True
     dependencies: List[str] = []  # 不强制依赖其他插件
-    python_dependencies: List[str] = ["aiohttp"]
+    python_dependencies: List[str] = ["aiohttp", "tomli_w"]  # tomli_w 用于配置自动合并
     config_file_name: str = "config.toml"
 
     config_section_descriptions = {
@@ -214,6 +216,15 @@ class SelfiePlugin(BasePlugin):
     def __init__(self, *args, **kwargs):
         """初始化插件"""
         super().__init__(*args, **kwargs)
+
+        # 确保用户配置存在并与默认配置合并
+        plugin_dir = Path(__file__).parent
+        try:
+            config_manager = ConfigManager(plugin_dir)
+            config_manager.ensure_user_config()
+        except Exception as e:
+            logger.warning(f"配置合并失败，使用默认配置: {e}")
+
         logger.info("麦麦自拍插件初始化完成")
 
     def get_plugin_components(self) -> List[Tuple]:

@@ -1,6 +1,19 @@
+# 用户配置（不跟踪，避免被 git pull 覆盖）
+# 默认配置在 config.default.toml，插件启动时自动合并
+config.toml
+
+# macOS
 .DS_Store
+
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+
+# 环境变量
 .env
 .env.*
+
+# 日志
 *.log

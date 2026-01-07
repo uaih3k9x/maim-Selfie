@@ -1,19 +1,28 @@
 # =============================================================================
-# 麦麦自拍插件配置
+# 麦麦自拍插件 - 默认配置
+# KIRISAME SYSTEMS™ | uaih3k9x
 # =============================================================================
+# 此文件为默认配置模板，会随插件更新
+# 用户配置请编辑 config.toml（不会被 git 覆盖）
+# 插件启动时会自动合并：用户配置优先，新增字段从此处补充
+# =============================================================================
+
+# 配置结构版本（用于检测不兼容变更）
+config_version = 1
+
 [plugin]
 enabled = true                        # 是否启用插件
-debug_mode = false                    # 调试模式：输出详细日志（stream_id来源、prompt、API响应等）
+debug_mode = false                    # 调试模式：输出详细日志
 
 [selfie]
 cooldown_seconds = 3600               # 冷却时间（默认1小时）
 max_daily_selfies = 5                 # 每日上限
 
-# API配置（可完全自定义）
+# API配置
 [selfie.api]
-api_base = "https://one-api.ygxz.in/v1/chat/completions"
-api_key = ""
-model = "gemini-3-pro-image"          # 生图模型
+api_base = ""                         # 生图API地址（OpenAI兼容格式）
+api_key = ""                          # API密钥（也可通过环境变量 SELFIE_API_KEY 设置）
+model = "gemini-2.0-flash-exp-image-generation"  # 生图模型
 timeout = 120                         # 超时（秒）
 max_retries = 2                       # 重试次数
 
@@ -39,17 +48,17 @@ pov_desc = "第一人称视角，像是自己眼睛看到的场景"
 [selfie.trigger]
 enable_llm_tool = true                # 允许LLM工具调用
 enable_activity_trigger = true        # 日程活动变化触发
-activity_trigger_probability = 0.1   # 活动变化时10%概率触发
+activity_trigger_probability = 0.1    # 活动变化时10%概率触发
 check_interval_seconds = 60           # 活动检查间隔（秒）
 
 # 权限配置
 [selfie.permission]
 allow_all = false                     # 是否允许所有群（true则忽略白名单）
-allowed_groups = []                   # 允许自拍的群白名单，格式如 ["qq:123456", "qq:789012"]
-debug_groups = []                     # 调试群：仅这些群可使用 /selfie，输出详细调试信息
+allowed_groups = []                   # 允许自拍的群白名单，格式: ["qq:123456"] 或直接 hash
+debug_groups = []                     # 调试群：可使用 /selfie，输出详细调试信息
 
 # 目标群选择配置
 [selfie.target]
 selection_mode = "most_active"        # "most_active" 或 "configured"
 activity_window_minutes = 30          # 活跃度计算窗口（分钟）
-configured_groups = []                # 指定群列表，格式如 ["qq:123456", "qq:789012"]
+configured_groups = []                # 指定群列表，格式: ["qq:123456"]
