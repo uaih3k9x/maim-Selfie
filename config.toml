@@ -1,0 +1,48 @@
+# =============================================================================
+# 麦麦自拍插件配置
+# =============================================================================
+[plugin]
+enabled = true                        # 是否启用插件
+
+[selfie]
+cooldown_seconds = 3600               # 冷却时间（默认1小时）
+max_daily_selfies = 5                 # 每日上限
+
+# API配置（可完全自定义）
+[selfie.api]
+api_base = "https://one-api.ygxz.in/v1/chat/completions"
+api_key = ""
+model = "gemini-3-pro-image"          # 生图模型
+timeout = 120                         # 超时（秒）
+max_retries = 2                       # 重试次数
+
+# 人设图片配置
+[selfie.character]
+image_folder = ""                     # 人设图片文件夹路径（留空则不使用参考图）
+use_random_image = true               # 每次随机选一张，false则按顺序轮换
+supported_formats = ["jpg", "jpeg", "png", "webp"]  # 支持的图片格式
+
+# 风格配置
+[selfie.style]
+professional_ratio = 0.3              # 30% 精美照片
+casual_ratio = 0.7                    # 70% 随手拍
+selfie_ratio = 0.5                    # 50% 自拍（能看到脸）
+pov_ratio = 0.5                       # 50% POV视角（第一人称看场景）
+# 可选：自定义风格描述
+professional_desc = "光线很好，画面清晰，像是精心拍摄的"
+casual_desc = "照片有点糊但是很真实，像是随手用手机拍的"
+selfie_desc = "自拍照，能看到人物的脸和表情"
+pov_desc = "第一人称视角，像是自己眼睛看到的场景"
+
+# 触发配置
+[selfie.trigger]
+enable_llm_tool = true                # 允许LLM工具调用
+enable_activity_trigger = true        # 日程活动变化触发
+activity_trigger_probability = 0.1   # 活动变化时10%概率触发
+check_interval_seconds = 60           # 活动检查间隔（秒）
+
+# 目标群选择配置
+[selfie.target]
+selection_mode = "most_active"        # "most_active" 或 "configured"
+activity_window_minutes = 30          # 活跃度计算窗口（分钟）
+configured_groups = []                # 指定群列表，格式如 ["qq:123456", "qq:789012"]

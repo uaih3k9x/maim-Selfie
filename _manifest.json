@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "name": "麦麦自拍插件",
+  "version": "1.0.0",
+  "description": "让麦麦能够拍摄自拍并发送到群里，基于人设和当前活动生成图片。支持精美照片和随手拍两种风格。",
+  "author": {
+    "name": "uaih3k9x",
+    "url": ""
+  },
+  "license": "MIT",
+  "repository_url": "",
+  "keywords": ["自拍", "图片生成", "Gemini", "AI生图", "MaiCore"],
+  "categories": ["AI", "娱乐", "聊天增强"],
+  "host_application": {
+    "min_version": "0.11.0",
+    "max_version": "1.0.0"
+  },
+  "default_locale": "zh-CN",
+  "plugin_info": {
+    "is_built_in": false,
+    "plugin_type": "general",
+    "components": [
+      {
+        "type": "tool",
+        "name": "take_selfie_photo",
+        "description": "拍摄照片并发送到群里"
+      },
+      {
+        "type": "event_handler",
+        "name": "selfie_activity_handler",
+        "description": "监控活动变化，小概率自动发送照片"
+      },
+      {
+        "type": "command",
+        "name": "selfie_command",
+        "description": "调试命令 /selfie，强制触发拍照"
+      }
+    ],
+    "features": [
+      "LLM工具调用 - 麦麦可以主动决定拍照",
+      "活动变化触发 - 日程切换时小概率自动触发",
+      "人设参考图 - 支持配置图片文件夹作为形象参考",
+      "双风格 - 30%精美照片 + 70%随手拍",
+      "智能目标 - 自动选择最活跃群或指定群",
+      "API可配置 - 支持任意OpenAI兼容格式的生图API"
+    ],
+    "dependencies": {
+      "python": ["aiohttp"],
+      "system": [],
+      "plugins": []
+    }
+  },
+  "configuration": {
+    "config_file": "config.toml",
+    "auto_generate": true
+  },
+  "id": "uaih3k9x.selfie_plugin"
+}
