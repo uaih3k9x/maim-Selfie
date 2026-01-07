@@ -13,6 +13,8 @@ from .utils import (
     debug_log,
     is_stream_in_list,
     get_stream_id_info,
+    get_current_activity,
+    get_current_activity_detailed,
 )
 
 __all__ = [
@@ -26,4 +28,6 @@ __all__ = [
     "debug_log",
     "is_stream_in_list",
     "get_stream_id_info",
+    "get_current_activity",
+    "get_current_activity_detailed",
 ]

@@ -11,7 +11,7 @@ from src.plugin_system import BaseEventHandler, EventType
 from src.plugin_system.apis import send_api
 from src.common.logger import get_logger
 
-from ..core import SelfieGenerator, SelfiePromptBuilder, TargetSelector
+from ..core import SelfieGenerator, SelfiePromptBuilder, TargetSelector, get_current_activity
 
 logger = get_logger("selfie_plugin.handler")
 
@@ -92,37 +92,9 @@ class SelfieActivityHandler(BaseEventHandler):
         获取当前活动（从自主规划插件）
 
         Returns:
-            当前活动名称，或None（如果无法获取）
+            当前活动名称（含描述），或None（如果无法获取）
         """
-        try:
-            # 尝试从自主规划插件获取当前活动
-            from src.plugin_system import get_plugin_manager
-            pm = get_plugin_manager()
-
-            # 查找自主规划插件
-            planning_plugin = pm.get_plugin("autonomous_planning_plugin")
-            if not planning_plugin:
-                return None
-
-            # 尝试获取当前活动
-            # 注意：这里需要根据自主规划插件的实际API来调整
-            if hasattr(planning_plugin, 'get_current_activity'):
-                return planning_plugin.get_current_activity()
-
-            # 备选方案：从schedule_manager获取
-            if hasattr(planning_plugin, 'schedule_manager'):
-                schedule_mgr = planning_plugin.schedule_manager
-                if hasattr(schedule_mgr, 'get_current_activity'):
-                    return schedule_mgr.get_current_activity()
-
-            return None
-
-        except ImportError:
-            logger.debug("无法导入plugin_system")
-            return None
-        except Exception as e:
-            logger.debug(f"获取当前活动失败: {e}")
-            return None
+        return get_current_activity()
 
     async def _take_selfie(self, activity: str):
         """拍摄并发送照片"""

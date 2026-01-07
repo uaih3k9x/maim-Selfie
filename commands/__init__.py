@@ -11,7 +11,7 @@ from src.common.logger import get_logger
 
 from ..core import (
     SelfieGenerator, SelfiePromptBuilder, TargetSelector, SelfieStyle, PhotoPerspective,
-    set_debug_mode, debug_log, is_stream_in_list, get_stream_id_info,
+    set_debug_mode, debug_log, is_stream_in_list, get_stream_id_info, get_current_activity,
 )
 
 logger = get_logger("selfie_plugin.command")
@@ -33,28 +33,8 @@ class SelfieCommand(BaseCommand):
     command_pattern = r"^/selfie(?:\s+(?P<args>.*))?$"
 
     def _get_current_activity(self) -> Optional[str]:
-        """尝试从自主规划插件获取当前活动"""
-        try:
-            from src.plugin_system import get_plugin_manager
-            pm = get_plugin_manager()
-
-            planning_plugin = pm.get_plugin("autonomous_planning_plugin")
-            if not planning_plugin:
-                return None
-
-            # 尝试获取当前活动
-            if hasattr(planning_plugin, 'get_current_activity'):
-                return planning_plugin.get_current_activity()
-
-            if hasattr(planning_plugin, 'schedule_manager'):
-                schedule_mgr = planning_plugin.schedule_manager
-                if hasattr(schedule_mgr, 'get_current_activity'):
-                    return schedule_mgr.get_current_activity()
-
-            return None
-        except Exception as e:
-            logger.debug(f"获取当前活动失败: {e}")
-            return None
+        """从自主规划插件获取当前活动（使用详细信息）"""
+        return get_current_activity()
 
     async def execute(self) -> Tuple[bool, Optional[str], int]:
         """执行命令"""
