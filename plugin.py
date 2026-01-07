@@ -1,4 +1,8 @@
 """麦麦自拍插件 - 主文件"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 from typing import List, Tuple, Type
 

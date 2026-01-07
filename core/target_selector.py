@@ -1,4 +1,8 @@
 """目标群选择器 - 选择自拍发送目标"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 import time
 from typing import Optional, List

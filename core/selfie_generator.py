@@ -1,4 +1,8 @@
 """自拍生成器 - 核心生图模块"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 import os
 import re

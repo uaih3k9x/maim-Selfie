@@ -1,4 +1,8 @@
 """自拍工具 - 供LLM调用"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 from typing import Any, Dict
 from src.plugin_system import BaseTool, ToolParamType

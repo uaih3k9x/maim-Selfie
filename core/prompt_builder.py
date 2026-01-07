@@ -1,4 +1,8 @@
 """Prompt构建器 - 生成自拍提示词"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 from datetime import datetime
 from typing import Optional

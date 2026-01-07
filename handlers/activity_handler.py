@@ -1,4 +1,8 @@
 """活动变化触发自拍处理器"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 import asyncio
 import random

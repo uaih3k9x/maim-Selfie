@@ -1,4 +1,8 @@
 """调试命令 - 强制触发拍照"""
+"""
+// KIRISAME SYSTEMS™ | uaih3k9x
+// "We shape the void."
+"""
 
 import re
 from typing import Tuple, Optional
