@@ -41,6 +41,11 @@ enable_activity_trigger = true        # 日程活动变化触发
 activity_trigger_probability = 0.1   # 活动变化时10%概率触发
 check_interval_seconds = 60           # 活动检查间隔（秒）
 
+# 权限配置
+[selfie.permission]
+allow_all = false                     # 是否允许所有群（true则忽略白名单）
+allowed_groups = []                   # 允许自拍的群白名单，格式如 ["qq:123456", "qq:789012"]
+
 # 目标群选择配置
 [selfie.target]
 selection_mode = "most_active"        # "most_active" 或 "configured"

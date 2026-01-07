@@ -38,6 +38,7 @@ class SelfiePlugin(BasePlugin):
         "selfie.character": "人设图片配置",
         "selfie.style": "照片风格配置",
         "selfie.trigger": "触发机制配置",
+        "selfie.permission": "权限配置",
         "selfie.target": "目标群配置",
     }
 
@@ -166,6 +167,18 @@ class SelfiePlugin(BasePlugin):
                     type=int,
                     default=60,
                     description="活动检查间隔（秒）"
+                ),
+            },
+            "permission": {
+                "allow_all": ConfigField(
+                    type=bool,
+                    default=False,
+                    description="是否允许所有群（true则忽略白名单）"
+                ),
+                "allowed_groups": ConfigField(
+                    type=list,
+                    default=[],
+                    description="允许自拍的群白名单，格式如 [\"qq:123456\", \"qq:789012\"]"
                 ),
             },
             "target": {

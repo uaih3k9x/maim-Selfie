@@ -68,6 +68,21 @@ class SelfieCommand(BaseCommand):
             # 获取配置
             selfie_config = self.get_config("selfie", {})
 
+            # 权限检查：检查当前群是否在白名单中
+            stream_id = getattr(self, 'stream_id', None) or getattr(self, '_stream_id', None)
+            if stream_id:
+                permission_cfg = selfie_config.get("permission", {})
+                allow_all = permission_cfg.get("allow_all", False)
+                allowed_groups = permission_cfg.get("allowed_groups", [])
+
+                if not allow_all:
+                    if not allowed_groups:
+                        await self.send_text("这个群没有开启自拍权限")
+                        return True, None, 2
+                    if stream_id not in allowed_groups:
+                        await self.send_text("这个群没有开启自拍权限")
+                        return True, None, 2
+
             # 初始化组件
             generator = SelfieGenerator(selfie_config)
             prompt_builder = SelfiePromptBuilder(selfie_config)

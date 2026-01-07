@@ -25,6 +25,7 @@
 [■] 时间感知        — 光线随真实时间变化
 [■] 人设参考图      — 可配置角色形象文件夹
 [■] Gemini 2.5 兼容 — 自动识别模型版本
+[■] 群白名单权限    — 严格限制自拍群范围
 ```
 
 ---
@@ -47,6 +48,10 @@ cp -r uaih3k9x_selfie_plugin /path/to/MaiBot/plugins/
 api_base = "your-api-endpoint"
 api_key = "your-api-key"
 model = "gemini-2.5-flash-preview-native-audio-image"
+
+[selfie.permission]
+allow_all = false             # true 则忽略白名单，允许所有群
+allowed_groups = ["qq:123456", "qq:789012"]  # 允许自拍的群白名单
 
 [selfie.style]
 professional_ratio = 0.3    # 30% 精美照片

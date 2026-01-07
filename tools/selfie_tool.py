@@ -45,6 +45,21 @@ class TakeSelfiePhotoTool(BaseTool):
             # 获取selfie配置
             selfie_config = self.get_config("selfie", {})
 
+            # 权限检查：检查当前群是否在白名单中
+            stream_id = function_args.get("_chat_id")
+            if stream_id:
+                permission_cfg = selfie_config.get("permission", {})
+                allow_all = permission_cfg.get("allow_all", False)
+                allowed_groups = permission_cfg.get("allowed_groups", [])
+
+                if not allow_all:
+                    if not allowed_groups:
+                        logger.debug(f"白名单为空且未开启allow_all，拒绝自拍: {stream_id}")
+                        return {"name": self.name, "content": "这个群没有开启自拍权限哦"}
+                    if stream_id not in allowed_groups:
+                        logger.debug(f"群不在白名单中，拒绝自拍: {stream_id}")
+                        return {"name": self.name, "content": "这个群没有开启自拍权限哦"}
+
             # 初始化组件
             generator = SelfieGenerator(selfie_config)
             prompt_builder = SelfiePromptBuilder(selfie_config)
