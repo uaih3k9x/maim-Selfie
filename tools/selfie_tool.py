@@ -9,7 +9,10 @@ from src.plugin_system import BaseTool, ToolParamType
 from src.plugin_system.apis import send_api
 from src.common.logger import get_logger
 
-from ..core import SelfieGenerator, SelfiePromptBuilder, TargetSelector, SelfieStyle, PhotoPerspective
+from ..core import (
+    SelfieGenerator, SelfiePromptBuilder, TargetSelector, SelfieStyle, PhotoPerspective,
+    set_debug_mode, debug_log, is_stream_in_list, get_stream_id_info,
+)
 
 logger = get_logger("selfie_plugin.tool")
 
@@ -42,19 +45,27 @@ class TakeSelfiePhotoTool(BaseTool):
             return {"name": self.name, "content": "LLM工具调用已禁用"}
 
         try:
+            # 初始化调试模式
+            debug_mode = self.get_config("plugin.debug_mode", False)
+            set_debug_mode(debug_mode)
+
             # 获取selfie配置
             selfie_config = self.get_config("selfie", {})
 
             # 权限检查：检查当前群是否在白名单中
             stream_id = function_args.get("_chat_id")
             if stream_id:
+                debug_log(f"LLM工具调用 - {get_stream_id_info(stream_id)}")
+
                 permission_cfg = selfie_config.get("permission", {})
                 allow_all = permission_cfg.get("allow_all", False)
                 allowed_groups = permission_cfg.get("allowed_groups", [])
 
-                if not allow_all and stream_id not in allowed_groups:
+                debug_log(f"权限配置: allow_all={allow_all}, allowed_groups={allowed_groups}")
+
+                if not allow_all and not is_stream_in_list(stream_id, allowed_groups):
                     # 只输出到 console，不返回消息给群
-                    logger.info(f"[权限拒绝] 群 {stream_id} 没有开启自拍权限，已静默拒绝")
+                    logger.info(f"[权限拒绝] 群 {stream_id} 没有开启自拍权限，已静默拒绝 (配置格式提示: 使用 qq:群号 或直接填 hash)")
                     return {"name": self.name, "content": ""}
 
             # 初始化组件

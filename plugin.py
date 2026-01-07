@@ -49,6 +49,11 @@ class SelfiePlugin(BasePlugin):
                 default=True,
                 description="是否启用插件"
             ),
+            "debug_mode": ConfigField(
+                type=bool,
+                default=False,
+                description="调试模式：输出详细日志"
+            ),
         },
         "selfie": {
             "cooldown_seconds": ConfigField(

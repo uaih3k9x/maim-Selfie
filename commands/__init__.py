@@ -9,7 +9,10 @@ from typing import Tuple, Optional
 from src.plugin_system import BaseCommand
 from src.common.logger import get_logger
 
-from ..core import SelfieGenerator, SelfiePromptBuilder, TargetSelector, SelfieStyle, PhotoPerspective
+from ..core import (
+    SelfieGenerator, SelfiePromptBuilder, TargetSelector, SelfieStyle, PhotoPerspective,
+    set_debug_mode, debug_log, is_stream_in_list, get_stream_id_info,
+)
 
 logger = get_logger("selfie_plugin.command")
 
@@ -60,6 +63,10 @@ class SelfieCommand(BaseCommand):
             return True, None, 2
 
         try:
+            # 初始化调试模式
+            debug_mode = self.get_config("plugin.debug_mode", False)
+            set_debug_mode(debug_mode)
+
             # 获取配置
             selfie_config = self.get_config("selfie", {})
             permission_cfg = selfie_config.get("permission", {})
@@ -70,9 +77,12 @@ class SelfieCommand(BaseCommand):
             if hasattr(self, 'message') and hasattr(self.message, 'chat_stream'):
                 stream_id = getattr(self.message.chat_stream, 'stream_id', None)
 
-            if not stream_id or stream_id not in debug_groups:
+            debug_log(f"/selfie 命令 - {get_stream_id_info(stream_id) if stream_id else 'stream_id=None'}")
+            debug_log(f"debug_groups 配置: {debug_groups}")
+
+            if not stream_id or not is_stream_in_list(stream_id, debug_groups):
                 # 非调试群静默忽略，只输出到 console
-                logger.info(f"[调试命令] 群 {stream_id} 不在调试群列表中，已忽略")
+                logger.info(f"[调试命令] 群 {stream_id} 不在调试群列表中，已忽略 (配置格式提示: 使用 qq:群号 或直接填 hash)")
                 return True, None, 2
 
             # 解析参数

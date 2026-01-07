@@ -8,6 +8,7 @@ import time
 from typing import Optional, List
 from src.plugin_system.apis import chat_api
 from src.common.logger import get_logger
+from .utils import is_stream_in_list, debug_log
 
 logger = get_logger("selfie_plugin.target")
 
@@ -30,9 +31,7 @@ class TargetSelector:
         """检查群是否在白名单中"""
         if self._allow_all:
             return True
-        if not self._allowed_groups:
-            return False
-        return stream_id in self._allowed_groups
+        return is_stream_in_list(stream_id, self._allowed_groups)
 
     def get_target_stream_id(self) -> Optional[str]:
         """
