@@ -52,13 +52,10 @@ class TakeSelfiePhotoTool(BaseTool):
                 allow_all = permission_cfg.get("allow_all", False)
                 allowed_groups = permission_cfg.get("allowed_groups", [])
 
-                if not allow_all:
-                    if not allowed_groups:
-                        logger.debug(f"白名单为空且未开启allow_all，拒绝自拍: {stream_id}")
-                        return {"name": self.name, "content": "这个群没有开启自拍权限哦"}
-                    if stream_id not in allowed_groups:
-                        logger.debug(f"群不在白名单中，拒绝自拍: {stream_id}")
-                        return {"name": self.name, "content": "这个群没有开启自拍权限哦"}
+                if not allow_all and stream_id not in allowed_groups:
+                    # 只输出到 console，不返回消息给群
+                    logger.info(f"[权限拒绝] 群 {stream_id} 没有开启自拍权限，已静默拒绝")
+                    return {"name": self.name, "content": ""}
 
             # 初始化组件
             generator = SelfieGenerator(selfie_config)

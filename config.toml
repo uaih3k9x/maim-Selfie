@@ -45,6 +45,7 @@ check_interval_seconds = 60           # 活动检查间隔（秒）
 [selfie.permission]
 allow_all = false                     # 是否允许所有群（true则忽略白名单）
 allowed_groups = []                   # 允许自拍的群白名单，格式如 ["qq:123456", "qq:789012"]
+debug_groups = []                     # 调试群：仅这些群可使用 /selfie，输出详细调试信息
 
 # 目标群选择配置
 [selfie.target]

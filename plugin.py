@@ -180,6 +180,11 @@ class SelfiePlugin(BasePlugin):
                     default=[],
                     description="允许自拍的群白名单，格式如 [\"qq:123456\", \"qq:789012\"]"
                 ),
+                "debug_groups": ConfigField(
+                    type=list,
+                    default=[],
+                    description="调试群：仅这些群可使用 /selfie，输出详细调试信息"
+                ),
             },
             "target": {
                 "selection_mode": ConfigField(

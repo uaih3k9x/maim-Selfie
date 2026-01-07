@@ -57,31 +57,24 @@ class SelfieCommand(BaseCommand):
         """执行命令"""
         # 检查插件是否启用
         if not self.get_config("plugin.enabled", True):
-            await self.send_text("自拍插件已禁用")
             return True, None, 2
 
         try:
+            # 获取配置
+            selfie_config = self.get_config("selfie", {})
+            permission_cfg = selfie_config.get("permission", {})
+            debug_groups = permission_cfg.get("debug_groups", [])
+
+            # 权限检查：只有调试群可以使用 /selfie 命令
+            stream_id = getattr(self, 'stream_id', None) or getattr(self, '_stream_id', None)
+            if not stream_id or stream_id not in debug_groups:
+                # 非调试群静默忽略，只输出到 console
+                logger.info(f"[调试命令] 群 {stream_id} 不在调试群列表中，已忽略")
+                return True, None, 2
+
             # 解析参数
             args_str = self.matched_groups.get("args", "") or ""
             args = args_str.strip().split() if args_str.strip() else []
-
-            # 获取配置
-            selfie_config = self.get_config("selfie", {})
-
-            # 权限检查：检查当前群是否在白名单中
-            stream_id = getattr(self, 'stream_id', None) or getattr(self, '_stream_id', None)
-            if stream_id:
-                permission_cfg = selfie_config.get("permission", {})
-                allow_all = permission_cfg.get("allow_all", False)
-                allowed_groups = permission_cfg.get("allowed_groups", [])
-
-                if not allow_all:
-                    if not allowed_groups:
-                        await self.send_text("这个群没有开启自拍权限")
-                        return True, None, 2
-                    if stream_id not in allowed_groups:
-                        await self.send_text("这个群没有开启自拍权限")
-                        return True, None, 2
 
             # 初始化组件
             generator = SelfieGenerator(selfie_config)
@@ -105,9 +98,7 @@ class SelfieCommand(BaseCommand):
             else:
                 # 尝试自动获取当前活动
                 activity = self._get_current_activity()
-                if activity:
-                    logger.info(f"自动获取到当前活动: {activity}")
-                else:
+                if not activity:
                     activity = "休息"
                 remaining_args = args
 
@@ -129,31 +120,63 @@ class SelfieCommand(BaseCommand):
             if style is None:
                 style = generator.select_style()
 
-            # 发送提示
+            # 获取API配置用于调试输出
+            api_cfg = selfie_config.get("api", {})
+            model = api_cfg.get("model", "unknown")
+
+            # 发送详细调试信息
             perspective_name = "自拍" if perspective == PhotoPerspective.SELFIE else "POV"
             style_name = "精美" if style == SelfieStyle.PROFESSIONAL else "随手拍"
-            await self.send_text(f"正在生成照片...\n活动: {activity}\n视角: {perspective_name}\n质量: {style_name}")
+
+            debug_info = f"""[DEBUG] 自拍调试信息
+━━━━━━━━━━━━━━━━━━━━
+stream_id: {stream_id}
+activity: {activity}
+perspective: {perspective.value} ({perspective_name})
+style: {style.value} ({style_name})
+model: {model}
+━━━━━━━━━━━━━━━━━━━━
+正在生成..."""
+
+            await self.send_text(debug_info)
+            logger.info(f"[调试命令] stream={stream_id}, activity={activity}, perspective={perspective.value}, style={style.value}")
 
             # 构建prompt并生成
             prompt = prompt_builder.build_prompt(activity, style, perspective)
-            logger.info(f"调试命令生成: activity={activity}, perspective={perspective.value}, style={style.value}")
+
+            # 输出 prompt 到 console
+            logger.info(f"[调试命令] Prompt:\n{prompt}")
 
             image_base64, error = await generator.generate_selfie(prompt)
 
             if error:
-                await self.send_text(f"生成失败: {error}")
+                error_msg = f"""[DEBUG] 生成失败
+━━━━━━━━━━━━━━━━━━━━
+error: {error}
+━━━━━━━━━━━━━━━━━━━━"""
+                await self.send_text(error_msg)
+                logger.error(f"[调试命令] 生成失败: {error}")
                 return True, None, 2
 
             # 发送图片
             success = await self.send_image(image_base64)
+
+            # 发送结果
+            result_msg = f"""[DEBUG] 生成完成
+━━━━━━━━━━━━━━━━━━━━
+success: {success}
+image_size: {len(image_base64) if image_base64 else 0} bytes (base64)
+━━━━━━━━━━━━━━━━━━━━"""
+            await self.send_text(result_msg)
+
             if success:
-                logger.info("调试命令: 照片发送成功")
-                return True, None, 2
+                logger.info(f"[调试命令] 照片发送成功")
             else:
-                await self.send_text("发送图片失败")
-                return True, None, 2
+                logger.error(f"[调试命令] 照片发送失败")
+
+            return True, None, 2
 
         except Exception as e:
-            logger.error(f"调试命令执行失败: {e}", exc_info=True)
-            await self.send_text(f"出错了: {str(e)}")
+            logger.error(f"[调试命令] 执行失败: {e}", exc_info=True)
+            await self.send_text(f"[DEBUG] Exception: {str(e)}")
             return True, None, 2
