@@ -66,7 +66,10 @@ class SelfieCommand(BaseCommand):
             debug_groups = permission_cfg.get("debug_groups", [])
 
             # 权限检查：只有调试群可以使用 /selfie 命令
-            stream_id = getattr(self, 'stream_id', None) or getattr(self, '_stream_id', None)
+            stream_id = None
+            if hasattr(self, 'message') and hasattr(self.message, 'chat_stream'):
+                stream_id = getattr(self.message.chat_stream, 'stream_id', None)
+
             if not stream_id or stream_id not in debug_groups:
                 # 非调试群静默忽略，只输出到 console
                 logger.info(f"[调试命令] 群 {stream_id} 不在调试群列表中，已忽略")
