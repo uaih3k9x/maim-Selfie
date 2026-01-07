@@ -63,8 +63,9 @@ class TakeSelfiePhotoTool(BaseTool):
             # 获取selfie配置
             selfie_config = self.get_config("selfie", {})
 
-            # 权限检查：检查当前群是否在白名单中（强制检查，无论 _chat_id 是否存在）
-            stream_id = function_args.get("_chat_id")
+            # 权限检查：检查当前群是否在白名单中（强制检查，无论 chat_id 是否存在）
+            # 注意：stream_id 从 self.chat_id 获取，不是 function_args
+            stream_id = self.chat_id
             permission_cfg = selfie_config.get("permission", {})
             allow_all = permission_cfg.get("allow_all", False)
             allowed_groups = permission_cfg.get("allowed_groups", [])
@@ -168,16 +169,16 @@ error: {error}
 
             # 获取目标群
             # 优先使用当前对话的stream_id，否则自动选择
-            stream_id = function_args.get("_chat_id") or target_selector.get_target_stream_id()
-            if not stream_id:
+            target_stream_id = self.chat_id or target_selector.get_target_stream_id()
+            if not target_stream_id:
                 return {"name": self.name, "content": "没有可发送的目标群"}
 
             # 发送图片
-            success = await send_api.image_to_stream(image_base64, stream_id)
+            success = await send_api.image_to_stream(image_base64, target_stream_id)
             if success:
                 style_name = "精美" if style == SelfieStyle.PROFESSIONAL else "随手拍"
                 perspective_name = "自拍" if perspective == PhotoPerspective.SELFIE else "POV"
-                logger.info(f"照片发送成功: stream={stream_id}, style={style_name}, perspective={perspective_name}")
+                logger.info(f"照片发送成功: stream={target_stream_id}, style={style_name}, perspective={perspective_name}")
 
                 # debug 模式下，发送成功信息到 debug 群
                 if debug_mode:
@@ -186,7 +187,7 @@ error: {error}
                         success_msg = f"""[DEBUG] 生成完成
 ━━━━━━━━━━━━━━━━━━━━
 success: True
-target_stream: {stream_id}
+target_stream: {target_stream_id}
 image_size: {len(image_base64)} bytes (base64)
 ━━━━━━━━━━━━━━━━━━━━"""
                         await send_to_debug_groups(debug_groups, success_msg)
@@ -196,14 +197,14 @@ image_size: {len(image_base64)} bytes (base64)
                     "content": f"照片已发送！(活动: {activity}, {perspective_name}, {style_name})"
                 }
             else:
-                logger.error(f"发送图片失败: stream={stream_id}")
+                logger.error(f"发送图片失败: stream={target_stream_id}")
                 # debug 模式下，发送失败信息到 debug 群
                 if debug_mode:
                     debug_groups = permission_cfg.get("debug_groups", [])
                     if debug_groups:
                         fail_msg = f"""[DEBUG] 发送失败
 ━━━━━━━━━━━━━━━━━━━━
-target_stream: {stream_id}
+target_stream: {target_stream_id}
 error: 发送图片到群失败
 ━━━━━━━━━━━━━━━━━━━━"""
                         await send_to_debug_groups(debug_groups, fail_msg)
