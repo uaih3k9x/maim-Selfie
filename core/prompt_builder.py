@@ -11,31 +11,47 @@ from .selfie_generator import SelfieStyle, PhotoPerspective
 
 
 # 日系动漫风格基础提示词（强力避免恐怖谷效应）
-ANIME_STYLE_BASE = """【最重要】画风要求 - 必须严格遵守：
-- 纯正日系二次元动漫插画风格（Japanese anime illustration style）
-- 完全的2D平面手绘质感，绝对不要任何3D渲染痕迹
-- 动漫风格的大眼睛、简化的五官、流畅的线条
-- 色彩鲜艳明快，有动漫特有的高光和阴影处理
-- 皮肤要有动漫特有的光滑质感，不要毛孔、皱纹等写实细节
+ANIME_STYLE_BASE = """
+=== CRITICAL: ART STYLE REQUIREMENTS ===
 
-【禁止事项】绝对不要出现：
-- 真人照片风格或写实风格
-- 3D渲染、CG电影风格
-- 恐怖谷效应（uncanny valley）- 不要介于真人和动漫之间的风格
-- 任何让人感觉不舒服的人脸
-- AI艺术常见的诡异变形
+【强制画风】Japanese 2D Anime Illustration Style ONLY:
+- Pure hand-drawn 2D anime aesthetic (セル画風/デジタルイラスト)
+- Flat cel-shading with clean line art (クリーンな線画)
+- Stylized anime face: large expressive eyes, small nose, simplified features
+- Vibrant anime color palette with characteristic highlights (ハイライト)
+- Smooth skin texture WITHOUT any realistic details (no pores, no wrinkles)
 
-【风格参考】请参考以下风格：
-- 日本轻小说封面插画
-- Galgame/视觉小说 CG
-- 《原神》《崩坏：星穹铁道》等日系手游立绘
-- Pixiv 热门日系插画
-- 新海诚、京都动画等日本动画的人物设计
+【技术参数 - Technical Specs】:
+- Line weight: Clean, consistent anime-style outlines
+- Coloring: Flat base colors + anime-style cel shading (2-3 tone shading)
+- Eyes: Large, glossy anime eyes with characteristic light reflections (目のハイライト)
+- Hair: Flowing anime hair with distinct color blocks and highlights
+- Skin: Smooth, porcelain-like anime skin tone
 
-【画面要求】：
-- 画面中不要出现任何文字、对话框、字幕、水印、签名
-- 不要有UI元素、边框、滤镜标签、相机界面
-- 纯净的画面，像是从动漫截取的一帧"""
+【绝对禁止 - NEVER Generate】:
+- ❌ Photorealistic or semi-realistic style
+- ❌ 3D rendered / CGI / Unreal Engine look
+- ❌ Uncanny valley effect (恐怖谷) - NO blending between realistic and anime
+- ❌ AI art artifacts: distorted faces, extra fingers, melted features
+- ❌ Western cartoon style (Disney/Pixar/DreamWorks)
+- ❌ Chibi/SD style (unless specified)
+
+【风格对标 - Reference Styles】:
+- ✅ Light novel cover illustrations (ラノベ表紙)
+- ✅ Visual novel / Galgame CG (ギャルゲCG)
+- ✅ Genshin Impact / Honkai: Star Rail character art (原神/崩铁立绘)
+- ✅ High-quality Pixiv illustrations (Pixiv人気イラスト)
+- ✅ Kyoto Animation / ufotable character designs
+- ✅ Modern seasonal anime key visuals
+
+【画面要求 - Image Requirements】:
+- NO text, speech bubbles, subtitles, watermarks, signatures
+- NO UI elements, frames, filter labels, camera interface
+- Clean composition like a single anime frame or illustration
+- Professional illustration quality (商業イラストレベル)
+
+=== END STYLE REQUIREMENTS ===
+"""
 
 
 def get_time_context() -> str:
@@ -109,10 +125,6 @@ class SelfiePromptBuilder:
         # 获取bot信息
         bot_name = config_api.get_global_config("bot.nickname", "麦麦")
         personality = config_api.get_global_config("personality.personality", "")
-
-        # 截取人设前150字，避免prompt过长
-        if personality and len(personality) > 150:
-            personality = personality[:150] + "..."
 
         # 选择质量风格描述
         quality_desc = self._professional_desc if style == SelfieStyle.PROFESSIONAL else self._casual_desc

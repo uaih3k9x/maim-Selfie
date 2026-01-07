@@ -160,6 +160,14 @@ model: {model}
             # 输出 prompt 到 console
             logger.info(f"[调试命令] Prompt:\n{prompt}")
 
+            # debug 模式下，把完整 prompt 也发送到群里
+            if debug_mode:
+                prompt_msg = f"""[DEBUG] 完整 Prompt
+━━━━━━━━━━━━━━━━━━━━
+{prompt}
+━━━━━━━━━━━━━━━━━━━━"""
+                await self.send_text(prompt_msg)
+
             image_base64, error = await generator.generate_selfie(prompt)
 
             if error:

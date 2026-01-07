@@ -4,17 +4,28 @@
 // "We shape the void."
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 from src.plugin_system import BaseTool, ToolParamType
 from src.plugin_system.apis import send_api
 from src.common.logger import get_logger
 
 from ..core import (
     SelfieGenerator, SelfiePromptBuilder, TargetSelector, SelfieStyle, PhotoPerspective,
-    set_debug_mode, debug_log, is_stream_in_list, get_stream_id_info,
+    set_debug_mode, debug_log, is_stream_in_list, get_stream_id_info, is_debug_mode,
 )
+from ..core.utils import normalize_stream_id
 
 logger = get_logger("selfie_plugin.tool")
+
+
+async def send_to_debug_groups(debug_groups: List[str], message: str):
+    """发送消息到所有 debug 群"""
+    for group_id in debug_groups:
+        try:
+            stream_id = normalize_stream_id(group_id)
+            await send_api.text_to_stream(message, stream_id)
+        except Exception as e:
+            logger.debug(f"发送到 debug 群 {group_id} 失败: {e}")
 
 
 class TakeSelfiePhotoTool(BaseTool):
@@ -52,19 +63,24 @@ class TakeSelfiePhotoTool(BaseTool):
             # 获取selfie配置
             selfie_config = self.get_config("selfie", {})
 
-            # 权限检查：检查当前群是否在白名单中
+            # 权限检查：检查当前群是否在白名单中（强制检查，无论 _chat_id 是否存在）
             stream_id = function_args.get("_chat_id")
-            if stream_id:
-                debug_log(f"LLM工具调用 - {get_stream_id_info(stream_id)}")
+            permission_cfg = selfie_config.get("permission", {})
+            allow_all = permission_cfg.get("allow_all", False)
+            allowed_groups = permission_cfg.get("allowed_groups", [])
 
-                permission_cfg = selfie_config.get("permission", {})
-                allow_all = permission_cfg.get("allow_all", False)
-                allowed_groups = permission_cfg.get("allowed_groups", [])
+            debug_log(f"LLM工具调用 - stream_id={stream_id}, {get_stream_id_info(stream_id) if stream_id else 'None'}")
+            debug_log(f"权限配置: allow_all={allow_all}, allowed_groups={allowed_groups}")
 
-                debug_log(f"权限配置: allow_all={allow_all}, allowed_groups={allowed_groups}")
-
-                if not allow_all and not is_stream_in_list(stream_id, allowed_groups):
-                    # 只输出到 console，不返回消息给群
+            # 权限判断逻辑：
+            # 1. 如果 allow_all=True，允许所有
+            # 2. 如果 stream_id 为 None，拒绝（无法确定来源群）
+            # 3. 如果 stream_id 不在白名单中，拒绝
+            if not allow_all:
+                if not stream_id:
+                    logger.info(f"[权限拒绝] stream_id 为空，无法确定来源群，已静默拒绝")
+                    return {"name": self.name, "content": ""}
+                if not is_stream_in_list(stream_id, allowed_groups):
                     logger.info(f"[权限拒绝] 群 {stream_id} 没有开启自拍权限，已静默拒绝 (配置格式提示: 使用 qq:群号 或直接填 hash)")
                     return {"name": self.name, "content": ""}
 
@@ -105,10 +121,49 @@ class TakeSelfiePhotoTool(BaseTool):
             # 构建prompt
             prompt = prompt_builder.build_prompt(activity, style, perspective, context)
 
+            # debug 模式下，发送调试信息到 debug 群
+            if debug_mode:
+                debug_groups = permission_cfg.get("debug_groups", [])
+                if debug_groups:
+                    # 获取 API 配置用于显示
+                    api_cfg = selfie_config.get("api", {})
+                    model = api_cfg.get("model", "unknown")
+
+                    perspective_name = "自拍" if perspective == PhotoPerspective.SELFIE else "POV"
+                    style_name = "精美" if style == SelfieStyle.PROFESSIONAL else "随手拍"
+
+                    debug_info = f"""[DEBUG] LLM Tool 调用自拍
+━━━━━━━━━━━━━━━━━━━━
+触发来源: {stream_id or 'None'}
+activity: {activity}
+perspective: {perspective.value} ({perspective_name})
+style: {style.value} ({style_name})
+model: {model}
+reason: {context or '(无)'}
+━━━━━━━━━━━━━━━━━━━━
+正在生成..."""
+                    await send_to_debug_groups(debug_groups, debug_info)
+
+                    # 发送完整 prompt
+                    prompt_msg = f"""[DEBUG] 完整 Prompt
+━━━━━━━━━━━━━━━━━━━━
+{prompt}
+━━━━━━━━━━━━━━━━━━━━"""
+                    await send_to_debug_groups(debug_groups, prompt_msg)
+
             # 生成图片
             image_base64, error = await generator.generate_selfie(prompt)
             if error:
                 logger.error(f"生成照片失败: {error}")
+                # debug 模式下，发送错误信息到 debug 群
+                if debug_mode:
+                    debug_groups = permission_cfg.get("debug_groups", [])
+                    if debug_groups:
+                        error_msg = f"""[DEBUG] 生成失败
+━━━━━━━━━━━━━━━━━━━━
+error: {error}
+━━━━━━━━━━━━━━━━━━━━"""
+                        await send_to_debug_groups(debug_groups, error_msg)
                 return {"name": self.name, "content": f"生成失败: {error}"}
 
             # 获取目标群
@@ -123,12 +178,35 @@ class TakeSelfiePhotoTool(BaseTool):
                 style_name = "精美" if style == SelfieStyle.PROFESSIONAL else "随手拍"
                 perspective_name = "自拍" if perspective == PhotoPerspective.SELFIE else "POV"
                 logger.info(f"照片发送成功: stream={stream_id}, style={style_name}, perspective={perspective_name}")
+
+                # debug 模式下，发送成功信息到 debug 群
+                if debug_mode:
+                    debug_groups = permission_cfg.get("debug_groups", [])
+                    if debug_groups:
+                        success_msg = f"""[DEBUG] 生成完成
+━━━━━━━━━━━━━━━━━━━━
+success: True
+target_stream: {stream_id}
+image_size: {len(image_base64)} bytes (base64)
+━━━━━━━━━━━━━━━━━━━━"""
+                        await send_to_debug_groups(debug_groups, success_msg)
+
                 return {
                     "name": self.name,
                     "content": f"照片已发送！(活动: {activity}, {perspective_name}, {style_name})"
                 }
             else:
                 logger.error(f"发送图片失败: stream={stream_id}")
+                # debug 模式下，发送失败信息到 debug 群
+                if debug_mode:
+                    debug_groups = permission_cfg.get("debug_groups", [])
+                    if debug_groups:
+                        fail_msg = f"""[DEBUG] 发送失败
+━━━━━━━━━━━━━━━━━━━━
+target_stream: {stream_id}
+error: 发送图片到群失败
+━━━━━━━━━━━━━━━━━━━━"""
+                        await send_to_debug_groups(debug_groups, fail_msg)
                 return {"name": self.name, "content": "发送失败"}
 
         except Exception as e:
